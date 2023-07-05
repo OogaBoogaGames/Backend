@@ -1,34 +1,27 @@
 mod games;
 
-use axum::{
-    routing::{get}, Router,
-};
-use std::{net::SocketAddr};
+use axum::{response::Redirect, routing::get, Router};
+use scorched::{log_this, LogData, LogImportance};
+use std::net::SocketAddr;
 
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
 
     let app = Router::new()
-        .route("/", get(root))
+        .fallback(|| async { Redirect::permanent("https://oogabooga.games/404") })
         .nest("/games", games::routes());
 
-
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-    tracing::debug!("listening on {}", addr);
+    log_this(LogData {
+        importance: LogImportance::Info,
+        message: format!("Caveman is now listening on {}", addr),
+    });
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
         .unwrap();
 }
-
-async fn root() -> &'static str {
-    "Hello, World!"
-}
-
-
-
-
 
 // async fn create_user(
 //     Json(payload): Json<CreateUser>,
@@ -51,5 +44,3 @@ async fn root() -> &'static str {
 //     id: u64,
 //     username: String,
 // }
-
-
