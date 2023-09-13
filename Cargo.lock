@@ -1705,6 +1705,7 @@ dependencies = [
  "serde_json",
  "surrealdb",
  "tokio",
+ "tokio-util",
  "tracing",
  "tracing-subscriber",
 ]
