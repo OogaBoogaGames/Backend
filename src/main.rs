@@ -1,11 +1,13 @@
 mod games;
 mod object_storage;
 
-use axum::{response::Redirect, Router};
+use axum::{http::Method, response::Redirect, Router};
 use object_storage::provider_base;
 use scorched::{log_this, LogData, LogImportance};
 use serde::{Deserialize, Serialize};
 use std::{net::SocketAddr, path::PathBuf};
+use tower::ServiceBuilder;
+use tower_http::cors::{Any, CorsLayer};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Config {
@@ -45,13 +47,18 @@ async fn main() -> Result<(), confy::ConfyError> {
     })
     .await;
 
+    let cors = CorsLayer::new()
+        .allow_methods([Method::GET, Method::POST])
+        .allow_origin(Any);
+
     let app = Router::new()
         .fallback(|| async { Redirect::permanent("https://oogabooga.games/404") })
         .nest("/games", games::routes::routes())
         .nest(
             "/assets",
             object_storage::routes::routes(cfg.object_storage_provider),
-        );
+        )
+        .layer(ServiceBuilder::new().layer(cors));
 
     log_this(LogData {
         importance: LogImportance::Info,
