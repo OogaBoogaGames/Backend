@@ -1,6 +1,6 @@
 [package]
 name = "oogaboogagames-backend"
-version = "0.1.2"
+version = "0.1.3"
 rust-version = "1.71"
 edition = "2021"
 
@@ -25,6 +25,6 @@ http-serde = "1.1.3"
 regex = "1.10.0"
 
 [features]
-default = ["storage-integrated"]
+default = ["storage-integrated", "storage-s3"]
 storage-integrated = []
 storage-s3 = ["dep:rust-s3", "dep:aws-region"]
