@@ -2,10 +2,10 @@ mod games;
 mod object_storage;
 
 use axum::{http::Method, response::Redirect, Router};
-use object_storage::provider_base;
+use object_storage::provider_base::{self, ObjectStorageProviderType};
 use scorched::{log_this, LogData, LogImportance};
 use serde::{Deserialize, Serialize};
-use std::{net::SocketAddr, path::PathBuf};
+use std::net::SocketAddr;
 use tower::ServiceBuilder;
 use tower_http::cors::{Any, CorsLayer};
 
@@ -19,9 +19,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             bind_address: SocketAddr::from(([127, 0, 0, 1], 8080)),
-            object_storage_provider: provider_base::ObjectStorageProviderType::Integrated {
-                bundles_dir: PathBuf::from("./srv_assets"),
-            },
+            object_storage_provider: ObjectStorageProviderType::Off,
         }
     }
 }
@@ -40,12 +38,6 @@ async fn main() -> Result<(), confy::ConfyError> {
     .await;
 
     let cfg: Config = confy::load("oogaboogagames-backend", None)?;
-
-    log_this(LogData {
-        importance: LogImportance::Debug,
-        message: format!("Loaded config data: {:?}", cfg),
-    })
-    .await;
 
     let cors = CorsLayer::new()
         .allow_methods([Method::GET, Method::POST])

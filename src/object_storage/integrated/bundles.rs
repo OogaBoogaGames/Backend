@@ -43,7 +43,11 @@ pub async fn get_raw(state: State<PathBuf>, Path(package): Path<String>) -> impl
                     if e.raw_os_error() == Some(2) {
                         return Err((StatusCode::NOT_FOUND, "Unknown resource.".to_string()));
                     }
-                    println!("Error canonicalizing full path for asset serving: {}", e);
+                    log_this(LogData {
+                        importance: LogImportance::Error,
+                        message: format!("Error canonicalizing full path for asset serving: {}", e),
+                    })
+                    .await;
                     Err((
                         StatusCode::INTERNAL_SERVER_ERROR,
                         "Error fetching resource.".to_string(),
@@ -52,7 +56,11 @@ pub async fn get_raw(state: State<PathBuf>, Path(package): Path<String>) -> impl
             }
         }
         Err(e) => {
-            println!("Error canonicalizing base path for asset serving: {}", e);
+            log_this(LogData {
+                importance: LogImportance::Error,
+                message: format!("Error canonicalizing base path for asset serving: {}", e),
+            })
+            .await;
             Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Error fetching resource.".to_string(),
