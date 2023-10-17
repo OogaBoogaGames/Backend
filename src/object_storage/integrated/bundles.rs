@@ -25,7 +25,7 @@ pub async fn get_raw(state: State<PathBuf>, Path(package): Path<String>) -> impl
                         .await;
                         let file = match tokio::fs::File::open(full_path).await {
                             Ok(file) => file,
-                            Err(err) => {
+                            Err(_err) => {
                                 return Err((
                                     StatusCode::NOT_FOUND,
                                     "Error fetching resource.".to_string(),
