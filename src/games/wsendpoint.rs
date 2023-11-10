@@ -1,13 +1,24 @@
 use axum::{
-    http::StatusCode,
-    Json,
+    extract::ws::{WebSocket, WebSocketUpgrade},
+    response::Response,
 };
-use serde::{Serialize};
 
-pub async fn get_websocket_endpoint() -> (StatusCode, Json<WsEndpointResponse>) {
-    (StatusCode::OK, Json(WsEndpointResponse { endpoint: "dssfsdsdsddssdfds".to_string() }))
+pub async fn ws_handler(ws: WebSocketUpgrade) -> Response {
+    ws.on_upgrade(handle_socket)
 }
-#[derive(Serialize)]
-pub struct WsEndpointResponse {
-    endpoint: String
+
+async fn handle_socket(mut socket: WebSocket) {
+    while let Some(msg) = socket.recv().await {
+        let msg = if let Ok(msg) = msg {
+            format!("echo: {:?}", msg.into_data()).into()
+        } else {
+            // client disconnected
+            return;
+        };
+
+        if socket.send(msg).await.is_err() {
+            // client disconnected
+            return;
+        }
+    }
 }

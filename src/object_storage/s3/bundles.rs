@@ -1,5 +1,4 @@
 use axum::{
-    body::StreamBody,
     extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,

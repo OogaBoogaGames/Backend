@@ -1,12 +1,20 @@
-use axum::{routing::get, Router};
+use axum::{
+    routing::{get, post},
+    Router,
+};
+use fred::prelude::RedisClient;
 
-use super::{resources, wsendpoint};
+use crate::util::appstate::AppState;
 
-pub fn routes() -> Router {
+use super::{create, info, wsendpoint};
+
+pub fn routes(state: AppState) -> Router {
     Router::new()
-        .route("/id/:id/resources", get(resources::get_resources))
+        .route("/id/:id/info", get(info::get_info))
+        .route("/create", post(create::post_game))
         .route(
             "/id/:id/player/:playerid/websocket",
-            get(wsendpoint::get_websocket_endpoint),
+            get(wsendpoint::ws_handler),
         )
+        .with_state(state)
 }

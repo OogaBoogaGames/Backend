@@ -1,3 +1,4 @@
-pub mod resources;
+pub mod create;
+pub mod info;
 pub mod routes;
 pub mod wsendpoint;

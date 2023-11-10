@@ -68,6 +68,8 @@ pub enum RegionDef {
     EuWest2,
     /// eu-west-3
     EuWest3,
+    /// il-central-1
+    IlCentral1,
     /// me-south-1
     MeSouth1,
     /// sa-east-1

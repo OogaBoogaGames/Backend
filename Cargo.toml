@@ -1,20 +1,28 @@
 [package]
 name = "oogaboogagames-backend"
 version = "0.1.3"
-rust-version = "1.71"
 edition = "2021"
+default-run = "backend"
+
+[[bin]]
+name = "backend"
+path = "src/main.rs"
+
+[[bin]]
+name = "js-host"
+path = "src/jshost.rs"
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-axum = "0.6.20"
+axum = { version = "0.6.20", features = ["ws"] }
 confy = { version = "0.5.1", features = ["ron_conf"], default-features = false }
 rust-s3 = { version = "0.33.0", optional = true }
 aws-region = { version = "0.25.3", features = ["serde"], optional = true }
-scorched = "0.2.8"
+scorched = "0.3.0"
 serde = { version = "1.0.188", features = ["derive"] }
 serde_json = "1.0.107"
-surrealdb = "1.0.0-beta.9"
 tokio = { version = "1.33.0", features = ["full"] }
 tokio-util = { version = "0.7.9", features = ["io"] }
 tower = "0.4.13"
@@ -23,6 +31,11 @@ tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 http-serde = "1.1.3"
 regex = "1.10.0"
+fred = "7.0.0"
+bytes = { version = "1.5.0", features = ["serde"] }
+axum-macros = "0.3.8"
+deno_core = "0.229.0"
+zbus = "3.14.1"
 
 [features]
 default = ["storage-integrated", "storage-s3"]
