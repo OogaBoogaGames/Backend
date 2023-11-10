@@ -1,10 +1,7 @@
 use axum::{
-    extract::ws::{Message, WebSocket, WebSocketUpgrade},
-    response::{IntoResponse, Response},
-    routing::get,
-    Router,
+    extract::ws::{WebSocket, WebSocketUpgrade},
+    response::Response,
 };
-use serde::Serialize;
 
 pub async fn ws_handler(ws: WebSocketUpgrade) -> Response {
     ws.on_upgrade(handle_socket)
@@ -25,8 +22,3 @@ async fn handle_socket(mut socket: WebSocket) {
         }
     }
 }
-
-// Arc::new(Mutex::new(JsRuntime::new(RuntimeOptions {
-//     extensions: vec![js::ext::oogabooga::init_ops_and_esm()],
-//     ..Default::default()
-// }))),
