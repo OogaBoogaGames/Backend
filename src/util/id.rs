@@ -5,13 +5,17 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
-use serde::Deserialize;
+use rand::Rng;
+
+use serde::{Deserialize, Serialize};
 
 pub struct GameId(u32);
 
-impl GameId {
-    // fn generate() -> Self {}
-}
+// impl GameId {
+//     fn generate() -> Self {
+//         Self(1)
+//     }
+// }
 
 impl fmt::Display for GameId {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -59,9 +63,18 @@ impl OBGIdFactory {
             incr: self.incr,
         }
     }
+    pub fn generate_game(&mut self) -> GameId {
+        let time = self
+            .last_time
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_millis() as u32;
+
+        GameId((time << 16) | rand::thread_rng().gen::<u16>() as u32)
+    }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Eq, Hash, PartialEq, Copy, Clone, Debug, Serialize, Deserialize)]
 pub struct OBGId {
     // Time in ms (first 48 bits)
     pub time: u64,
@@ -96,7 +109,7 @@ impl From<u64> for OBGId {
     }
 }
 
-#[derive(Copy, Clone, Deserialize, Debug)]
+#[derive(Eq, Hash, PartialEq, Copy, Clone, Debug, Serialize, Deserialize)]
 #[repr(u8)]
 pub enum IdType {
     Unknown = 0,

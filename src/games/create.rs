@@ -1,10 +1,17 @@
+use std::sync::Arc;
+
 use axum::{extract::State, response::IntoResponse, Extension, Json};
+use axum_macros::debug_handler;
 use serde::Deserialize;
+use tokio::sync::Mutex;
 use zbus::dbus_proxy;
 
-use crate::util::{
-    appstate::AppState,
-    id::{GameId, IdType, OBGId},
+use crate::{
+    games::zbus::JsInterfaceProxy,
+    util::{
+        appstate::AppState,
+        id::{GameId, IdType, OBGId},
+    },
 };
 
 #[derive(Deserialize)]
@@ -12,22 +19,17 @@ pub struct CreateGame {
     pub game_type: String,
 }
 
-#[dbus_proxy(
-    interface = "games.oogabooga.JsHost",
-    default_service = "games.oogabooga.JsHost",
-    default_path = "/games/oogabooga/JsHost"
-)]
-trait MyGreeter {
-    async fn say_hello(&self, name: &str) -> zbus::Result<String>;
-}
-
+#[debug_handler]
 pub async fn post_game(
-    mut state: State<AppState>,
+    state: State<Arc<Mutex<AppState>>>,
     Json(payload): Json<CreateGame>,
 ) -> impl IntoResponse {
+    let mut state = state.lock().await;
+
     let id = state.id_factory.generate(IdType::Game);
 
-    let proxy = MyGreeterProxy::new(&state.z_conn).await.unwrap();
+    let proxy = JsInterfaceProxy::new(&state.z_conn).await.unwrap();
 
-    proxy.say_hello(&id.to_string()).await.unwrap()
+    proxy.create_game(id.into()).await.unwrap();
+    format!("Created game {}.", id.to_string())
 }

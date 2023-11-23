@@ -2,13 +2,18 @@ use deno_core::extension;
 use deno_core::op2;
 
 #[op2(fast)]
+fn is_prod() -> bool {
+    !cfg!(debug_assertions)
+}
+
+#[op2(fast)]
 fn op_get_players() -> Result<f64, deno_core::error::AnyError> {
     Ok(100.0)
 }
 
 extension!(
     oogabooga,
-    ops = [op_get_players],
+    ops = [op_get_players, is_prod],
     esm_entry_point = "ext:oogabooga/src/js/ext.js",
     esm = [
         "src/js/ext.js",
