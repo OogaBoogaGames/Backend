@@ -3,7 +3,7 @@ mod object_storage;
 mod user;
 mod util;
 
-use axum::{response::Redirect, BoxError, Router};
+use axum::{http::Method, response::Redirect, BoxError, Router};
 use deadpool_redis::Runtime;
 use object_storage::provider_base::ObjectStorageProviderType;
 use rand_chacha::ChaCha8Rng;
@@ -12,7 +12,8 @@ use scorched::{log_this, LogData, LogImportance};
 use serde::{Deserialize, Serialize};
 use std::{net::SocketAddr, sync::Arc};
 use tokio::sync::Mutex;
-use tower_http::cors::CorsLayer;
+use tower::ServiceBuilder;
+use tower_http::cors::{Any, CorsLayer};
 use util::{
     appstate::{AppState, Argon2Config},
     id::OBGIdFactory,
@@ -66,6 +67,10 @@ async fn main() -> Result<(), confy::ConfyError> {
         rand,
     }));
 
+    let cors = CorsLayer::new()
+        .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
+        .allow_origin(Any);
+
     let app = Router::new()
         .fallback(|| async { Redirect::permanent("https://oogabooga.games/404") })
         .nest("/user", user::routes::routes(Arc::clone(&appstate)))
@@ -74,8 +79,7 @@ async fn main() -> Result<(), confy::ConfyError> {
             "/assets",
             object_storage::routes::routes(cfg.object_storage_provider),
         )
-        .layer(CorsLayer::permissive());
-
+        .layer(ServiceBuilder::new().layer(cors));
     log_this(LogData {
         importance: LogImportance::Info,
         message: format!("Caveman is now listening on {}", cfg.bind_address),
