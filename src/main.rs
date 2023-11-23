@@ -12,6 +12,7 @@ use scorched::{log_this, LogData, LogImportance};
 use serde::{Deserialize, Serialize};
 use std::{net::SocketAddr, sync::Arc};
 use tokio::sync::Mutex;
+use tower_http::cors::CorsLayer;
 use util::{
     appstate::{AppState, Argon2Config},
     id::OBGIdFactory,
@@ -72,7 +73,8 @@ async fn main() -> Result<(), confy::ConfyError> {
         .nest(
             "/assets",
             object_storage::routes::routes(cfg.object_storage_provider),
-        );
+        )
+        .layer(CorsLayer::permissive());
 
     log_this(LogData {
         importance: LogImportance::Info,
