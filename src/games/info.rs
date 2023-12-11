@@ -4,18 +4,17 @@ use axum::{
     extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
-    Json,
 };
 use axum_macros::debug_handler;
 use serde::Serialize;
 use tokio::sync::Mutex;
 
-use crate::{games::zbus::JsInterfaceProxy, util::appstate::AppState};
+use crate::{util::appstate::AppState};
 
 #[debug_handler]
 pub async fn get_info(
-    state: State<Arc<Mutex<AppState>>>,
-    Path(id): Path<u64>,
+    _state: State<Arc<Mutex<AppState>>>,
+    Path(_id): Path<u64>,
 ) -> impl IntoResponse {
     (StatusCode::OK, format!("{:#?}", "TODO"))
     // match state.hgetall(format!("id:{}", id)).await {

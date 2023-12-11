@@ -1,16 +1,16 @@
 use std::sync::Arc;
 
-use axum::{extract::State, response::IntoResponse, Extension, Json};
-use axum_macros::debug_handler;
+use axum::{extract::State, response::IntoResponse, Json};
+
 use serde::Deserialize;
 use tokio::sync::Mutex;
-use zbus::dbus_proxy;
+
 
 use crate::{
     games::zbus::JsInterfaceProxy,
     util::{
         appstate::AppState,
-        id::{GameId, IdType, OBGId},
+        id::{IdType},
     },
 };
 
@@ -22,7 +22,7 @@ pub struct CreateGame {
 // #[debug_handler]/
 pub async fn post_game(
     state: State<Arc<Mutex<AppState>>>,
-    Json(payload): Json<CreateGame>,
+    Json(_payload): Json<CreateGame>,
 ) -> impl IntoResponse {
     let mut state = state.lock().await;
 

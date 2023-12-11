@@ -1,6 +1,6 @@
 use std::num::ParseIntError;
 
-use deadpool_redis::redis::RedisError;
+
 use serde::{Deserialize, Serialize};
 
 use crate::util::id::OBGId;

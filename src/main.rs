@@ -3,7 +3,7 @@ mod object_storage;
 mod user;
 mod util;
 
-use axum::{http::Method, response::Redirect, BoxError, Router};
+use axum::{http::Method, response::Redirect, Router};
 use deadpool_redis::Runtime;
 use object_storage::provider_base::ObjectStorageProviderType;
 use rand_chacha::ChaCha8Rng;

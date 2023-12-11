@@ -1,15 +1,15 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{sync::Arc};
 
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
-use axum_macros::debug_handler;
+
 use deadpool_redis::redis::{AsyncCommands, RedisError};
 use rand::rngs::OsRng;
 // use fred::{interfaces::HashesInterface, types::RedisMap};
 use serde::Deserialize;
 use serde_json::json;
 use tokio::sync::Mutex;
-use tracing_subscriber::fmt::format;
+
 
 use crate::{
     user::user::User,

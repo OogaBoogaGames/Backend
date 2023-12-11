@@ -9,13 +9,13 @@ use deadpool_redis::{
 };
 use rand_chacha::ChaCha8Rng;
 use rand_core::RngCore;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize};
 use serde_json::json;
 use tokio::sync::Mutex;
 
 use crate::{
     user::user::User,
-    util::{appstate::AppState, id::OBGId},
+    util::{appstate::AppState},
 };
 
 use super::user::AuthData;
