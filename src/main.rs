@@ -11,7 +11,7 @@ use rand_core::{OsRng, RngCore, SeedableRng};
 use scorched::{log_this, LogData, LogImportance};
 use serde::{Deserialize, Serialize};
 use std::{net::SocketAddr, sync::Arc};
-use tokio::sync::Mutex;
+use tokio::{net::TcpListener, sync::Mutex};
 use tower::ServiceBuilder;
 use tower_http::cors::{Any, CorsLayer};
 use util::{
@@ -49,8 +49,7 @@ async fn main() -> Result<(), confy::ConfyError> {
             "Loading config file from {}",
             confy::get_configuration_file_path("oogaboogagames-backend", None)?.display()
         ),
-    })
-    .await;
+    });
 
     let cfg: Config = confy::load("oogaboogagames-backend", None)?;
 
@@ -83,13 +82,11 @@ async fn main() -> Result<(), confy::ConfyError> {
     log_this(LogData {
         importance: LogImportance::Info,
         message: format!("Caveman is now listening on {}", cfg.bind_address),
-    })
-    .await;
+    });
 
-    axum::Server::bind(&cfg.bind_address)
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
+    let listener = TcpListener::bind(cfg.bind_address).await.unwrap();
+
+    axum::serve(listener, app).await.unwrap();
 
     Ok(())
 }

@@ -19,7 +19,7 @@ pub struct CreateGame {
     pub game_type: String,
 }
 
-#[debug_handler]
+// #[debug_handler]/
 pub async fn post_game(
     state: State<Arc<Mutex<AppState>>>,
     Json(payload): Json<CreateGame>,

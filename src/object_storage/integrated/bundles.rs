@@ -1,14 +1,16 @@
 use std::path::PathBuf;
 
 use axum::{
-    body::StreamBody,
+    body::Body,
     extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
 };
+use axum_macros::debug_handler;
 use scorched::{log_this, LogData, LogImportance};
 use tokio_util::io::ReaderStream;
 
+#[debug_handler]
 pub async fn get_raw(state: State<PathBuf>, Path(package): Path<String>) -> impl IntoResponse {
     match state.canonicalize() {
         Ok(base_path) => {
@@ -21,8 +23,7 @@ pub async fn get_raw(state: State<PathBuf>, Path(package): Path<String>) -> impl
                         log_this(LogData {
                             importance: LogImportance::Info,
                             message: format!("Serving bundle from path: {}", full_path.display()),
-                        })
-                        .await;
+                        });
                         let file = match tokio::fs::File::open(full_path).await {
                             Ok(file) => file,
                             Err(_err) => {
@@ -33,7 +34,7 @@ pub async fn get_raw(state: State<PathBuf>, Path(package): Path<String>) -> impl
                             }
                         };
                         let stream = ReaderStream::new(file);
-                        let body = StreamBody::new(stream);
+                        let body = Body::from_stream(stream);
 
                         return Ok((StatusCode::OK, body));
                     }
@@ -46,8 +47,7 @@ pub async fn get_raw(state: State<PathBuf>, Path(package): Path<String>) -> impl
                     log_this(LogData {
                         importance: LogImportance::Error,
                         message: format!("Error canonicalizing full path for asset serving: {}", e),
-                    })
-                    .await;
+                    });
                     Err((
                         StatusCode::INTERNAL_SERVER_ERROR,
                         "Error fetching resource.".to_string(),
@@ -59,8 +59,7 @@ pub async fn get_raw(state: State<PathBuf>, Path(package): Path<String>) -> impl
             log_this(LogData {
                 importance: LogImportance::Error,
                 message: format!("Error canonicalizing base path for asset serving: {}", e),
-            })
-            .await;
+            });
             Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Error fetching resource.".to_string(),

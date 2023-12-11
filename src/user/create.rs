@@ -22,7 +22,7 @@ pub struct CreateUser {
     pub password: String,
 }
 
-#[debug_handler]
+// #[debug_handler]
 pub async fn post_user(
     state: State<Arc<Mutex<AppState>>>,
     Json(payload): Json<CreateUser>,
