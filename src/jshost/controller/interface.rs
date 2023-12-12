@@ -2,7 +2,7 @@ use std::{
     collections::HashMap,
     env,
     process::{self, Command, Stdio},
-    sync::{mpsc, Arc, Mutex, MutexGuard},
+    sync::{Arc, Mutex, MutexGuard},
 };
 
 use ipc_channel::platform::{OsIpcOneShotServer, OsIpcReceiver, OsIpcSender};

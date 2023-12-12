@@ -1,4 +1,3 @@
-
 use deadpool_redis::Pool;
 
 use rand_chacha::ChaCha8Rng;

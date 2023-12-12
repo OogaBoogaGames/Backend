@@ -1,13 +1,5 @@
-use std::{
-    env,
-    error::Error,
-    future::pending,
-    process::{self, Command, Stdio},
-    sync::{mpsc, Mutex},
-    thread,
-};
+use std::{error::Error, future::pending};
 
-use ipc_channel::platform::{OsIpcOneShotServer, OsIpcReceiver, OsIpcSender};
 use scorched::{log_this, LogData, LogImportance};
 use zbus::ConnectionBuilder;
 
