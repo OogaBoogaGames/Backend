@@ -1,9 +1,8 @@
 use std::num::ParseIntError;
 
-
 use serde::{Deserialize, Serialize};
 
-use crate::util::id::OBGId;
+use crate::backend::util::id::OBGId;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct User {

@@ -1,4 +1,4 @@
-use std::{sync::Arc};
+use std::sync::Arc;
 
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
@@ -10,8 +10,7 @@ use serde::Deserialize;
 use serde_json::json;
 use tokio::sync::Mutex;
 
-
-use crate::{
+use crate::backend::{
     user::user::User,
     util::{appstate::AppState, id::IdType},
 };

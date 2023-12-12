@@ -5,13 +5,9 @@ use axum::{extract::State, response::IntoResponse, Json};
 use serde::Deserialize;
 use tokio::sync::Mutex;
 
-
-use crate::{
+use crate::backend::{
     games::zbus::JsInterfaceProxy,
-    util::{
-        appstate::AppState,
-        id::{IdType},
-    },
+    util::{appstate::AppState, id::IdType},
 };
 
 #[derive(Deserialize)]
@@ -31,5 +27,6 @@ pub async fn post_game(
     let proxy = JsInterfaceProxy::new(&state.z_conn).await.unwrap();
 
     proxy.create_game(id.into()).await.unwrap();
+    proxy.list_games().await.unwrap();
     format!("Created game {}.", id.to_string())
 }

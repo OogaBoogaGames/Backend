@@ -1,11 +1,11 @@
-mod games;
-mod object_storage;
-mod user;
-mod util;
-
 use axum::{http::Method, response::Redirect, Router};
+use backend::object_storage::provider_base::ObjectStorageProviderType;
+use backend::util::{
+    appstate::{AppState, Argon2Config},
+    id::OBGIdFactory,
+};
 use deadpool_redis::Runtime;
-use object_storage::provider_base::ObjectStorageProviderType;
+use oogaboogagames_backend::backend;
 use rand_chacha::ChaCha8Rng;
 use rand_core::{OsRng, RngCore, SeedableRng};
 use scorched::{log_this, LogData, LogImportance};
@@ -14,10 +14,6 @@ use std::{net::SocketAddr, sync::Arc};
 use tokio::{net::TcpListener, sync::Mutex};
 use tower::ServiceBuilder;
 use tower_http::cors::{Any, CorsLayer};
-use util::{
-    appstate::{AppState, Argon2Config},
-    id::OBGIdFactory,
-};
 use zbus::Connection;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -72,11 +68,17 @@ async fn main() -> Result<(), confy::ConfyError> {
 
     let app = Router::new()
         .fallback(|| async { Redirect::permanent("https://oogabooga.games/404") })
-        .nest("/user", user::routes::routes(Arc::clone(&appstate)))
-        .nest("/games", games::routes::routes(Arc::clone(&appstate)))
+        .nest(
+            "/user",
+            backend::user::routes::routes(Arc::clone(&appstate)),
+        )
+        .nest(
+            "/games",
+            backend::games::routes::routes(Arc::clone(&appstate)),
+        )
         .nest(
             "/assets",
-            object_storage::routes::routes(cfg.object_storage_provider),
+            backend::object_storage::routes::routes(cfg.object_storage_provider),
         )
         .layer(ServiceBuilder::new().layer(cors));
     log_this(LogData {

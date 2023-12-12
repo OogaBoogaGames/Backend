@@ -7,4 +7,5 @@ use zbus::dbus_proxy;
 )]
 trait JsInterface {
     async fn create_game(&self, id: u64) -> zbus::Result<()>;
+    async fn list_games(&self) -> zbus::Result<()>;
 }

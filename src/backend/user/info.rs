@@ -5,7 +5,7 @@ use deadpool_redis::redis::AsyncCommands;
 use serde_json::json;
 use tokio::sync::Mutex;
 
-use crate::util::appstate::AppState;
+use crate::backend::util::appstate::AppState;
 
 use super::user::{AuthData, User};
 

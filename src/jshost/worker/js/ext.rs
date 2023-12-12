@@ -14,9 +14,9 @@ fn op_get_players() -> Result<f64, deno_core::error::AnyError> {
 extension!(
     oogabooga,
     ops = [op_get_players, is_prod],
-    esm_entry_point = "ext:oogabooga/src/js/ext.js",
+    esm_entry_point = "ext:oogabooga/src/jshost/worker/js/ext.js",
     esm = [
-        "src/js/ext.js",
+        "src/jshost/worker/js/ext.js",
         "node_modules/@oogaboogagames/game-core/dist/ext/GameBase.js",
         "node_modules/@oogaboogagames/game-core/dist/ext/Player.js",
         "node_modules/@oogaboogagames/game-core/dist/ext/LobbyStage.js",
