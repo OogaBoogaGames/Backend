@@ -12,6 +12,7 @@ import { LobbyStage } from "ext:oogabooga/node_modules/@oogaboogagames/game-core
   const core = Deno.core;
 
   const isprod = core.ops.is_prod();
+  const op_log = core.ops.op_log;
 
   function argsToMessage(...args) {
     return args
@@ -24,15 +25,14 @@ import { LobbyStage } from "ext:oogabooga/node_modules/@oogaboogagames/game-core
   }
 
   // Populate global context with the console API
-  intentionallyPopulateGlobal(
-    "console",
-    new Proxy(
+  Object.defineProperty(globalThis, "console", {
+    value: new Proxy(
       {
         log: (...args) => {
-          core.print(`[out]: ${argsToMessage(...args)}\n`, false);
+          op_log("Info", argsToMessage(...args));
         },
         error: (...args) => {
-          core.print(`[err]: ${argsToMessage(...args)}\n`, true);
+          op_log("Error", argsToMessage(...args));
         },
       },
       {
@@ -51,91 +51,23 @@ import { LobbyStage } from "ext:oogabooga/node_modules/@oogaboogagames/game-core
           }
         },
       }
-    )
-  );
-
-  const hideFn =
-    (_0) =>
-    (..._1) =>
-      _0(..._1);
-
-  // Populate global context with the Games object
-  intentionallyPopulateGlobal(
-    "Games",
-    (() => {
-      const securedObject = {};
-
-      return Object.freeze({
-        set: hideFn((key, value, secretKey) => {
-          securedObject[key] = {
-            value: value,
-            secretKey: secretKey,
-          };
-        }),
-        get: hideFn((key, secretKey) => {
-          if (
-            key in securedObject &&
-            securedObject[key].secretKey === secretKey
-          ) {
-            return securedObject[key].value;
-          } else {
-            throw new Error("Unauthorized access");
-          }
-        }),
-        query: hideFn((key) => {
-          return key in securedObject;
-        }),
-        delete: hideFn((key, secretKey) => {
-          if (
-            key in securedObject &&
-            securedObject[key].secretKey === secretKey
-          ) {
-            delete securedObject[key];
-          } else {
-            throw new Error("Unauthorized access");
-          }
-        }),
-        securedObject: hideFn(() => {
-          if (isprod) {
-            throw new Error("Unauthorized access");
-          } else {
-            return securedObject;
-          }
-        }),
-      });
-    })(),
-    {
-      writable: false,
-      configurable: false,
-      enumerable: true,
-    }
-  );
+    ),
+  });
 
   // Populate global context with the game APIs
-  intentionallyPopulateGlobal(
-    "OogaBooga",
-    Object.freeze({
+  // Note: intentionally polluting the global context
+  Object.defineProperty(globalThis, "OogaBooga", {
+    value: Object.freeze({
       Game,
       GameState,
       LobbyStage,
       Player,
       GameStage,
     }),
-    {
-      writable: false,
-      configurable: false,
-      enumerable: true,
-    }
-  );
-
-  // Note: Function signifies intentional
-  // pollution of the global context
-  const intentionallyPopulateGlobal = (name, value, options = {}) => {
-    Object.defineProperty(globalThis, name, {
-      value,
-      ...options,
-    });
-  };
+    writable: false,
+    configurable: false,
+    enumerable: true,
+  });
 })(globalThis);
 
 delete Deno.core;

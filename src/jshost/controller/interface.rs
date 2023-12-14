@@ -5,7 +5,11 @@ use std::{
     sync::{Arc, Mutex, MutexGuard},
 };
 
+use scorched::{LogData, LogImportance};
+
+use deno_core::error::JsError;
 use ipc_channel::platform::{OsIpcOneShotServer, OsIpcReceiver, OsIpcSender};
+use scorched::logf;
 use serde::{Deserialize, Serialize};
 use zbus::dbus_interface;
 
@@ -37,10 +41,11 @@ impl Message {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Op {
-    Init,
-    InitComplete,
-    ExecuteScript(String),
-    ExecuteComplete(String),
+    Init,                                     // Initialization
+    InitComplete,                             // Initialization complete
+    ExecuteScript(String),                    // Execute script, with script as string
+    ExecuteComplete(Result<String, JsError>), // Execution completion, with script output
+    Nop(Option<String>),                      // No operation, Optional comment
 }
 pub struct JsInterface {
     pub workers: HashMap<OBGId, Worker>,
@@ -62,7 +67,16 @@ impl JsInterface {
                     if let Ok(msg) = bincode::deserialize::<Message>(&data.0) {
                         match msg.op() {
                             Op::InitComplete => {
-                                worker.next(Op::InitComplete);
+                                let next = worker.next(Op::ExecuteScript(
+                                    "console.log('Hello, world!');".into(),
+                                ));
+                                tx.send(&bincode::serialize(&next).unwrap()[..], vec![], vec![])
+                                    .unwrap();
+                            }
+                            Op::ExecuteComplete(_) => {
+                                let next = worker.next(Op::Nop(None));
+                                tx.send(&bincode::serialize(&next).unwrap()[..], vec![], vec![])
+                                    .unwrap();
                                 break;
                             }
                             _ => {}
