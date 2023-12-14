@@ -1,15 +1,12 @@
 use std::{error::Error, future::pending};
 
-use scorched::{log_this, LogData, LogImportance};
+use scorched::{log_this, logf, LogData, LogImportance};
 use zbus::ConnectionBuilder;
 
 use crate::jshost::controller::interface::JsInterface;
 
 pub async fn run() -> Result<(), Box<dyn Error>> {
-    log_this(LogData {
-        importance: LogImportance::Info,
-        message: "Starting JsHost in controller mode.".to_string(),
-    });
+    logf!(Info, "Starting JsHost in controller mode.");
 
     let greeter = JsInterface {
         workers: Default::default(),

@@ -7,7 +7,7 @@ use axum::{
     response::IntoResponse,
 };
 use axum_macros::debug_handler;
-use scorched::{log_this, LogData, LogImportance};
+use scorched::{log_this, logf, LogData, LogImportance};
 use tokio_util::io::ReaderStream;
 
 #[debug_handler]
@@ -20,10 +20,7 @@ pub async fn get_raw(state: State<PathBuf>, Path(package): Path<String>) -> impl
             match full_path.canonicalize() {
                 Ok(full_path) => {
                     if full_path.starts_with(base_path) {
-                        log_this(LogData {
-                            importance: LogImportance::Info,
-                            message: format!("Serving bundle from path: {}", full_path.display()),
-                        });
+                        logf!(Info, "Serving bundle from path: {}", full_path.display());
                         let file = match tokio::fs::File::open(full_path).await {
                             Ok(file) => file,
                             Err(_err) => {
@@ -44,10 +41,11 @@ pub async fn get_raw(state: State<PathBuf>, Path(package): Path<String>) -> impl
                     if e.raw_os_error() == Some(2) {
                         return Err((StatusCode::NOT_FOUND, "Unknown resource.".to_string()));
                     }
-                    log_this(LogData {
-                        importance: LogImportance::Error,
-                        message: format!("Error canonicalizing full path for asset serving: {}", e),
-                    });
+                    logf!(
+                        Error,
+                        "Error canonicalizing full path for asset serving: {}",
+                        e
+                    );
                     Err((
                         StatusCode::INTERNAL_SERVER_ERROR,
                         "Error fetching resource.".to_string(),
@@ -56,10 +54,11 @@ pub async fn get_raw(state: State<PathBuf>, Path(package): Path<String>) -> impl
             }
         }
         Err(e) => {
-            log_this(LogData {
-                importance: LogImportance::Error,
-                message: format!("Error canonicalizing base path for asset serving: {}", e),
-            });
+            logf!(
+                Error,
+                "Error canonicalizing base path for asset serving: {}",
+                e
+            );
             Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Error fetching resource.".to_string(),

@@ -8,7 +8,7 @@ use deadpool_redis::Runtime;
 use oogaboogagames_backend::backend;
 use rand_chacha::ChaCha8Rng;
 use rand_core::{OsRng, RngCore, SeedableRng};
-use scorched::{log_this, LogData, LogImportance};
+use scorched::{log_this, logf, LogData, LogImportance};
 use serde::{Deserialize, Serialize};
 use std::{net::SocketAddr, sync::Arc};
 use tokio::{net::TcpListener, sync::Mutex};
@@ -39,13 +39,11 @@ impl Default for Config {
 async fn main() -> Result<(), confy::ConfyError> {
     tracing_subscriber::fmt::init();
 
-    log_this(LogData {
-        importance: LogImportance::Debug,
-        message: format!(
-            "Loading config file from {}",
-            confy::get_configuration_file_path("oogaboogagames-backend", None)?.display()
-        ),
-    });
+    logf!(
+        Info,
+        "Loading config file from {}",
+        confy::get_configuration_file_path("oogaboogagames-backend", None)?.display()
+    );
 
     let cfg: Config = confy::load("oogaboogagames-backend", None)?;
 
@@ -81,10 +79,7 @@ async fn main() -> Result<(), confy::ConfyError> {
             backend::object_storage::routes::routes(cfg.object_storage_provider),
         )
         .layer(ServiceBuilder::new().layer(cors));
-    log_this(LogData {
-        importance: LogImportance::Info,
-        message: format!("Caveman is now listening on {}", cfg.bind_address),
-    });
+    logf!(Info, "Backend is now listening on {}", cfg.bind_address);
 
     let listener = TcpListener::bind(cfg.bind_address).await.unwrap();
 
