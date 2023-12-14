@@ -6,7 +6,10 @@ use std::{
 use ipc_channel::platform::{self, OsIpcChannel, OsIpcSender};
 use scorched::{LogData, LogImportance};
 
-use crate::jshost::controller::interface::{Message, Op};
+use crate::{
+    jshost::controller::interface::{Message, Op},
+    message_handler,
+};
 
 use super::log::worker_log;
 
@@ -20,11 +23,11 @@ pub async fn run(name: String) -> Result<(), Box<dyn Error>> {
     );
 
     let (controller_tx, worker_tx, worker_rx) = {
-        let (tx, rx) = platform::channel()?;
+        let (worker_tx, worker_rx) = platform::channel()?;
         (
             OsIpcSender::connect(name.to_string())?,
-            tx,
-            Arc::new(Mutex::new(rx)),
+            worker_tx,
+            Arc::new(Mutex::new(worker_rx)),
         )
     };
 
@@ -33,28 +36,12 @@ pub async fn run(name: String) -> Result<(), Box<dyn Error>> {
         .unwrap();
 
     loop {
-        match worker_rx.lock().unwrap().recv() {
-            Ok(recv) => {
-                if let Ok(msg) = bincode::deserialize::<Message>(&recv.0) {
-                    println!("slave received data: {:?}", msg);
-                    match msg.op() {
-                        Op::Init => {
-                            let next = msg.next(Op::InitComplete);
-                            controller_tx
-                                .clone()
-                                .send(&bincode::serialize(&next).unwrap()[..], vec![], vec![])
-                                .unwrap();
-                        }
-
-                        _ => {
-                            println!("slave received data: {:?}", msg);
-                        }
-                    }
-                } else {
-                    println!("womp womp")
-                }
-            }
-            _ => {}
-        }
+        message_handler!(worker_rx.lock().unwrap(), Op::Init => |msg: Message | {
+            let next = msg.next(Op::InitComplete);
+            controller_tx
+                .clone()
+                .send(&bincode::serialize(&next).unwrap()[..], vec![], vec![])
+                .unwrap();
+        });
     }
 }

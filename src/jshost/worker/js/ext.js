@@ -17,38 +17,41 @@ import { LobbyStage } from "ext:oogabooga/node_modules/@oogaboogagames/game-core
     return args
       .map((arg) =>
         JSON.stringify(arg, (_k, v) =>
-          typeof v == "function" ? v.toString() : v,
-        ),
+          typeof v == "function" ? v.toString() : v
+        )
       )
       .join(" ");
   }
 
   // Populate global context with the console API
-  globalThis.console = new Proxy(
-    {
-      log: (...args) => {
-        core.print(`[out]: ${argsToMessage(...args)}\n`, false);
+  intentionallyPopulateGlobal(
+    "console",
+    new Proxy(
+      {
+        log: (...args) => {
+          core.print(`[out]: ${argsToMessage(...args)}\n`, false);
+        },
+        error: (...args) => {
+          core.print(`[err]: ${argsToMessage(...args)}\n`, true);
+        },
       },
-      error: (...args) => {
-        core.print(`[err]: ${argsToMessage(...args)}\n`, true);
-      },
-    },
-    {
-      get: function (target, prop) {
-        if (isprod) {
-          throw new Error(`Cannot access console in production`);
-        } else {
-          return target[prop];
-        }
-      },
-      set: function (target, prop, value) {
-        if (isprod) {
-          throw new Error(`Cannot access console in production`);
-        } else {
-          return target[prop];
-        }
-      },
-    },
+      {
+        get: function (target, prop) {
+          if (isprod) {
+            throw new Error(`Cannot access console in production`);
+          } else {
+            return target[prop];
+          }
+        },
+        set: function (target, prop, value) {
+          if (isprod) {
+            throw new Error(`Cannot access console in production`);
+          } else {
+            return target[prop];
+          }
+        },
+      }
+    )
   );
 
   const hideFn =
@@ -57,9 +60,9 @@ import { LobbyStage } from "ext:oogabooga/node_modules/@oogaboogagames/game-core
       _0(..._1);
 
   // Populate global context with the Games object
-  // Note: intentionally polluting the global context
-  Object.defineProperty(globalThis, "Games", {
-    value: (() => {
+  intentionallyPopulateGlobal(
+    "Games",
+    (() => {
       const securedObject = {};
 
       return Object.freeze({
@@ -101,25 +104,38 @@ import { LobbyStage } from "ext:oogabooga/node_modules/@oogaboogagames/game-core
         }),
       });
     })(),
-    writable: false,
-    configurable: false,
-    enumerable: true,
-  });
+    {
+      writable: false,
+      configurable: false,
+      enumerable: true,
+    }
+  );
 
   // Populate global context with the game APIs
-  // Note: intentionally polluting the global context
-  Object.defineProperty(globalThis, "OogaBooga", {
-    value: Object.freeze({
+  intentionallyPopulateGlobal(
+    "OogaBooga",
+    Object.freeze({
       Game,
       GameState,
       LobbyStage,
       Player,
       GameStage,
     }),
-    writable: false,
-    configurable: false,
-    enumerable: true,
-  });
+    {
+      writable: false,
+      configurable: false,
+      enumerable: true,
+    }
+  );
+
+  // Note: Function signifies intentional
+  // pollution of the global context
+  const intentionallyPopulateGlobal = (name, value, options = {}) => {
+    Object.defineProperty(globalThis, name, {
+      value,
+      ...options,
+    });
+  };
 })(globalThis);
 
 delete Deno.core;
