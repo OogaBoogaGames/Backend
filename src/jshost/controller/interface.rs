@@ -43,6 +43,8 @@ impl Message {
 pub enum Op {
     Init,                                     // Initialization
     InitComplete,                             // Initialization complete
+    LoadGame(OBGId),                          // Load game, with game id
+    LoadGameComplete(Result<(), JsError>),    // Load game completion, with result
     ExecuteScript(String),                    // Execute script, with script as string
     ExecuteComplete(Result<String, JsError>), // Execution completion, with script output
     Nop(Option<String>),                      // No operation, Optional comment
@@ -67,8 +69,14 @@ impl JsInterface {
                     if let Ok(msg) = bincode::deserialize::<Message>(&data.0) {
                         match msg.op() {
                             Op::InitComplete => {
+                                let next = worker.next(Op::LoadGame(id.into()));
+                                tx.send(&bincode::serialize(&next).unwrap()[..], vec![], vec![])
+                                    .unwrap();
+                            }
+                            Op::LoadGameComplete(_) => {
                                 let next = worker.next(Op::ExecuteScript(
-                                    "console.log('Hello, world!');".into(),
+                                    "console.log('Hello, world!'); console.log(globalThis.target)"
+                                        .into(),
                                 ));
                                 tx.send(&bincode::serialize(&next).unwrap()[..], vec![], vec![])
                                     .unwrap();

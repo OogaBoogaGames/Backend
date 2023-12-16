@@ -1,17 +1,25 @@
 use std::{
+    env,
     error::Error,
+    fs::File,
+    path::PathBuf,
     process,
     sync::{Arc, Mutex},
 };
 
-use deno_core::{JsRuntime, RuntimeOptions};
+use caveman::proto::Caveman::CavemanGameBundle;
+use deno_core::{FastString, JsRuntime, RuntimeOptions};
 use ipc_channel::platform::{self, OsIpcChannel, OsIpcSender};
-use scorched::{logf, set_log_prefix, LogData, LogImportance};
+use protobuf::Message as _;
+use scorched::{logf, set_log_prefix, LogData, LogExpect, LogImportance};
 
 use crate::{
     jshost::{
-        controller::interface::{Message, Op},
-        worker::js::ext::oogabooga,
+        controller::{
+            self,
+            interface::{Message, Op},
+        },
+        worker::{js::ext::oogabooga, ops},
     },
     message_handler,
 };
@@ -19,6 +27,11 @@ use crate::{
 pub async fn run(name: String) -> Result<(), Box<dyn Error>> {
     let prefix = format!("Worker at \"{}\" (pid {}):", &name, process::id());
     set_log_prefix(&prefix);
+
+    env::var("GAMES_PATH").unwrap_or_else(|_| {
+        env::set_var("GAMES_PATH", "games/");
+        "games/".to_string()
+    });
 
     logf!(Info, "Starting JsHost in worker mode.");
 
@@ -43,23 +56,9 @@ pub async fn run(name: String) -> Result<(), Box<dyn Error>> {
     loop {
         message_handler!(
             worker_rx.lock().unwrap(),
-            Op::Init => |msg: Message | {
-                let next = msg.next(Op::InitComplete);
-                controller_tx
-                    .clone()
-                    .send(&bincode::serialize(&next).unwrap()[..], vec![], vec![])
-                    .unwrap();
-                },
-            Op::ExecuteScript(script) => |msg: Message| {
-                runtime
-                    .execute_script("__obg__.runtime", script.into())
-                    .unwrap();
-                let next = msg.next(Op::ExecuteComplete(Ok("".to_string())));
-                controller_tx
-                    .clone()
-                    .send(&bincode::serialize(&next).unwrap()[..], vec![], vec![])
-                    .unwrap();
-            }
+            Op::Init => |msg: Message | ops::init::init(msg, (&mut runtime, controller_tx.clone())),
+            Op::LoadGame(id) => |msg: Message| ops::loadgame::loadgame(msg, id, (&mut runtime, controller_tx.clone())),
+            Op::ExecuteScript(script) => |msg: Message| ops::executescript::executescript(msg, script, (&mut runtime, controller_tx.clone()))
         );
     }
 }

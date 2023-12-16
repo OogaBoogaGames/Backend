@@ -109,6 +109,20 @@ impl From<u64> for OBGId {
     }
 }
 
+impl From<String> for OBGId {
+    fn from(value: String) -> Self {
+        let value = u64::from_str_radix(&value, 16).unwrap();
+        let time: u64 = (value >> 16) as u64;
+        let id_type: IdType = (((value >> 8) & 0xFF) as u8).into();
+        let incr: u8 = (value & 0xFF) as u8;
+        Self {
+            time,
+            id_type,
+            incr,
+        }
+    }
+}
+
 #[derive(Eq, Hash, PartialEq, Copy, Clone, Debug, Serialize, Deserialize)]
 #[repr(u8)]
 pub enum IdType {
@@ -124,5 +138,21 @@ impl From<u8> for IdType {
             2 => IdType::User,
             _ => IdType::Unknown,
         }
+    }
+}
+
+mod tests {
+    use super::{IdType::*, *};
+
+    #[test]
+    fn test_id() {
+        let mut factory = OBGIdFactory::new();
+
+        let types: Vec<IdType> = vec![Game, User, Unknown];
+
+        types.iter().for_each(|id_type| {
+            let id = factory.generate(*id_type);
+            println!("Generated id: {} with type: {:?}", id, id.id_type);
+        });
     }
 }
