@@ -1,6 +1,6 @@
 use std::{error::Error, future::pending};
 
-use scorched::{log_this, logf, LogData, LogImportance};
+use scorched::{logf, LogData, LogImportance};
 use zbus::ConnectionBuilder;
 
 use crate::jshost::controller::interface::JsInterface;

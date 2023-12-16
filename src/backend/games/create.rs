@@ -9,7 +9,7 @@ use crate::backend::{
     games::zbus::JsInterfaceProxy,
     util::{
         appstate::AppState,
-        id::{IdType, OBGId},
+        id::{OBGId},
     },
 };
 
@@ -23,7 +23,7 @@ pub async fn post_game(
     state: State<Arc<Mutex<AppState>>>,
     Json(payload): Json<CreateGame>,
 ) -> impl IntoResponse {
-    let mut state = state.lock().await;
+    let state = state.lock().await;
 
     let proxy = JsInterfaceProxy::new(&state.z_conn).await.unwrap();
 

@@ -5,11 +5,11 @@ use std::{
     sync::{Arc, Mutex, MutexGuard},
 };
 
-use scorched::{LogData, LogImportance};
+
 
 use deno_core::error::JsError;
 use ipc_channel::platform::{OsIpcOneShotServer, OsIpcReceiver, OsIpcSender};
-use scorched::logf;
+
 use serde::{Deserialize, Serialize};
 use zbus::dbus_interface;
 

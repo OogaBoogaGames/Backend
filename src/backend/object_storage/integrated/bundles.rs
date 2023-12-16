@@ -7,7 +7,7 @@ use axum::{
     response::IntoResponse,
 };
 use axum_macros::debug_handler;
-use scorched::{log_this, logf, LogData, LogImportance};
+use scorched::{logf, LogData, LogImportance};
 use tokio_util::io::ReaderStream;
 
 #[debug_handler]

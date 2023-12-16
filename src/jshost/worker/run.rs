@@ -1,22 +1,19 @@
 use std::{
     env,
     error::Error,
-    fs::File,
-    path::PathBuf,
     process,
     sync::{Arc, Mutex},
 };
 
-use caveman::proto::Caveman::CavemanGameBundle;
-use deno_core::{FastString, JsRuntime, RuntimeOptions};
+
+use deno_core::{JsRuntime, RuntimeOptions};
 use ipc_channel::platform::{self, OsIpcChannel, OsIpcSender};
 use protobuf::Message as _;
-use scorched::{logf, set_log_prefix, LogData, LogExpect, LogImportance};
+use scorched::{logf, set_log_prefix, LogData, LogImportance};
 
 use crate::{
     jshost::{
         controller::{
-            self,
             interface::{Message, Op},
         },
         worker::{js::ext::oogabooga, ops},

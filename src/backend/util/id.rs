@@ -142,13 +142,16 @@ impl From<u8> for IdType {
 }
 
 mod tests {
-    use super::{IdType::*, *};
 
     #[test]
     fn test_id() {
-        let mut factory = OBGIdFactory::new();
+        let mut factory = super::OBGIdFactory::new();
 
-        let types: Vec<IdType> = vec![Game, User, Unknown];
+        let types: Vec<super::IdType> = vec![
+            super::IdType::Game,
+            super::IdType::User,
+            super::IdType::Unknown,
+        ];
 
         types.iter().for_each(|id_type| {
             let id = factory.generate(*id_type);

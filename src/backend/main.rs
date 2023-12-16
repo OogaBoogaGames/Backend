@@ -8,7 +8,7 @@ use deadpool_redis::Runtime;
 use oogaboogagames_backend::backend;
 use rand_chacha::ChaCha8Rng;
 use rand_core::{OsRng, RngCore, SeedableRng};
-use scorched::{log_this, logf, LogData, LogImportance};
+use scorched::{logf, LogData, LogImportance};
 use serde::{Deserialize, Serialize};
 use std::{net::SocketAddr, sync::Arc};
 use tokio::{net::TcpListener, sync::Mutex};
