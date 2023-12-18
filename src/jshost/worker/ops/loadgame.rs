@@ -19,10 +19,10 @@ pub fn loadgame(msg: Message, id: OBGId, (runtime, controller_tx): (&mut JsRunti
         .into();
 
     let file = File::open(games_path.join(format!("{}.obg", id)))
-        .log_expect(LogImportance::Error, "Failed to open game index.js");
+        .log_expect(LogImportance::Error, "Failed to open game file.");
 
     let game = CavemanGameBundle::parse_from_reader(&mut &file)
-        .log_expect(LogImportance::Error, "Failed to parse game index.js");
+        .log_expect(LogImportance::Error, "Failed to parse game file.");
 
     let code = String::from_utf8(game.runtime).unwrap();
 

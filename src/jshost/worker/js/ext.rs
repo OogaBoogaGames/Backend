@@ -37,7 +37,9 @@ extension!(
     esm = [
         "src/jshost/worker/js/ext.js",
         "node_modules/@oogaboogagames/game-core/dist/ext/GameBase.js",
-        "node_modules/@oogaboogagames/game-core/dist/ext/Player.js",
         "node_modules/@oogaboogagames/game-core/dist/ext/LobbyStage.js",
+        "node_modules/@oogaboogagames/game-core/dist/ext/ErrorStage.js",
+        "node_modules/@oogaboogagames/game-core/dist/ext/Player.js",
+        "node_modules/@oogaboogagames/game-core/dist/ext/Decorators.js",
     ],
 );

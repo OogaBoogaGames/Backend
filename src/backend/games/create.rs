@@ -7,10 +7,7 @@ use tokio::sync::Mutex;
 
 use crate::backend::{
     games::zbus::JsInterfaceProxy,
-    util::{
-        appstate::AppState,
-        id::{OBGId},
-    },
+    util::{appstate::AppState, id::OBGId},
 };
 
 #[derive(Deserialize)]
@@ -23,13 +20,15 @@ pub async fn post_game(
     state: State<Arc<Mutex<AppState>>>,
     Json(payload): Json<CreateGame>,
 ) -> impl IntoResponse {
-    let state = state.lock().await;
+    let mut state = state.lock().await;
 
     let proxy = JsInterfaceProxy::new(&state.z_conn).await.unwrap();
 
     let game = OBGId::from(payload.game);
 
-    proxy.create_game(game.into()).await.unwrap();
+    let code = state.id_factory.generate_game();
+
+    proxy.create_game(game.into(), code.0).await.unwrap();
     proxy.list_games().await.unwrap();
     format!("Created game {}.", game)
 }

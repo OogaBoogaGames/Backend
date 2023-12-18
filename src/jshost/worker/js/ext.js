@@ -1,8 +1,11 @@
 import {
   Game,
-  GameState,
   GameStage,
 } from "ext:oogabooga/node_modules/@oogaboogagames/game-core/dist/ext/GameBase.js";
+
+import { obg_main } from "ext:oogabooga/node_modules/@oogaboogagames/game-core/dist/ext/Decorators.js";
+
+import { ErrorStage } from "ext:oogabooga/node_modules/@oogaboogagames/game-core/dist/ext/ErrorStage.js";
 
 import { Player } from "ext:oogabooga/node_modules/@oogaboogagames/game-core/dist/ext/Player.js";
 
@@ -15,11 +18,18 @@ import { LobbyStage } from "ext:oogabooga/node_modules/@oogaboogagames/game-core
   const op_log = core.ops.op_log;
 
   function argsToMessage(...args) {
+    const seen = new WeakSet();
     return args
       .map((arg) =>
-        JSON.stringify(arg, (_k, v) =>
-          typeof v == "function" ? v.toString() : v
-        )
+        JSON.stringify(arg, (_k, v) => {
+          if (typeof value === "object" && value !== null) {
+            if (seen.has(v)) {
+              return "[Circular]";
+            }
+            seen.add(v);
+          }
+          return typeof v == "function" ? v.toString() : v;
+        })
       )
       .join(" ");
   }
@@ -59,14 +69,39 @@ import { LobbyStage } from "ext:oogabooga/node_modules/@oogaboogagames/game-core
   Object.defineProperty(globalThis, "OogaBooga", {
     value: Object.freeze({
       Game,
-      GameState,
       LobbyStage,
       Player,
       GameStage,
+      ErrorStage,
     }),
     writable: false,
     configurable: false,
     enumerable: true,
+  });
+
+  let timers = {
+    setTimeout: function (callback, delay) {
+      return core.queueTimer(core.getTimerDepth() + 1, false, delay, callback);
+    },
+    setInterval: function (callback, delay) {
+      return core.queueTimer(core.getTimerDepth() + 1, true, delay, callback);
+    },
+    clearTimeout: function (id) {
+      core.cancelTimer(id);
+    },
+    clearInterval: function (id) {
+      core.cancelTimer(id);
+    },
+    unrefTimer: function (id) {
+      core.unrefTimer(id);
+    },
+    refTimer: function (id) {
+      core.refTimer(id);
+    },
+  };
+
+  Object.keys(timers).forEach((key) => {
+    globalThis[key] = timers[key];
   });
 })(globalThis);
 

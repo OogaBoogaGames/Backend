@@ -6,6 +6,6 @@ use zbus::dbus_proxy;
     default_path = "/games/oogabooga/JsHost"
 )]
 trait JsInterface {
-    async fn create_game(&self, id: u64) -> zbus::Result<()>;
+    async fn create_game(&self, id: u64, code: u32) -> zbus::Result<()>;
     async fn list_games(&self) -> zbus::Result<()>;
 }

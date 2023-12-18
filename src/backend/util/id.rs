@@ -9,7 +9,8 @@ use rand::Rng;
 
 use serde::{Deserialize, Serialize};
 
-pub struct GameId(u32);
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct GameId(pub u32);
 
 // impl GameId {
 //     fn generate() -> Self {
@@ -140,7 +141,6 @@ impl From<u8> for IdType {
         }
     }
 }
-
 mod tests {
 
     #[test]

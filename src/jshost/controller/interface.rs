@@ -5,15 +5,14 @@ use std::{
     sync::{Arc, Mutex, MutexGuard},
 };
 
-
-
 use deno_core::error::JsError;
 use ipc_channel::platform::{OsIpcOneShotServer, OsIpcReceiver, OsIpcSender};
 
+use scorched::{logf, LogData, LogImportance};
 use serde::{Deserialize, Serialize};
 use zbus::dbus_interface;
 
-use crate::backend::util::id::OBGId;
+use crate::backend::util::id::{GameId, OBGId};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Message {
@@ -43,8 +42,10 @@ impl Message {
 pub enum Op {
     Init,                                     // Initialization
     InitComplete,                             // Initialization complete
-    LoadGame(OBGId),                          // Load game, with game id
+    LoadGame(OBGId),                          // Load game, with game id (OBGId)
     LoadGameComplete(Result<(), JsError>),    // Load game completion, with result
+    StartGame(GameId),                        // Start game, with game id (game code)
+    StartGameComplete(Result<(), JsError>),   // Start game completion, with result
     ExecuteScript(String),                    // Execute script, with script as string
     ExecuteComplete(Result<String, JsError>), // Execution completion, with script output
     Nop(Option<String>),                      // No operation, Optional comment
@@ -55,7 +56,7 @@ pub struct JsInterface {
 
 #[dbus_interface(name = "games.oogabooga.JsHost.JsInterface")]
 impl JsInterface {
-    fn create_game(&mut self, id: u64) {
+    fn create_game(&mut self, id: u64, code: u32) {
         let worker = Worker::spawn();
         let msg = worker.init();
         let (tx, rx) = (worker.tx().unwrap(), worker.rx().unwrap());
@@ -69,24 +70,25 @@ impl JsInterface {
                     if let Ok(msg) = bincode::deserialize::<Message>(&data.0) {
                         match msg.op() {
                             Op::InitComplete => {
+                                logf!(Info, "Init complete");
                                 let next = worker.next(Op::LoadGame(id.into()));
                                 tx.send(&bincode::serialize(&next).unwrap()[..], vec![], vec![])
                                     .unwrap();
                             }
                             Op::LoadGameComplete(_) => {
-                                let next = worker.next(Op::ExecuteScript(
-                                    "console.log('Hello, world!'); console.log(globalThis.target)"
-                                        .into(),
-                                ));
+                                logf!(Info, "Load complete");
+                                let next = worker.next(Op::StartGame(GameId(code)));
                                 tx.send(&bincode::serialize(&next).unwrap()[..], vec![], vec![])
                                     .unwrap();
                             }
-                            Op::ExecuteComplete(_) => {
+                            Op::StartGameComplete(_) => {
+                                logf!(Info, "Start complete");
                                 let next = worker.next(Op::Nop(None));
                                 tx.send(&bincode::serialize(&next).unwrap()[..], vec![], vec![])
                                     .unwrap();
                                 break;
                             }
+
                             _ => {}
                         }
                     }
@@ -124,7 +126,7 @@ impl Worker {
                 .arg(format!("--worker={}", name))
                 .stdin(Stdio::null())
                 .stdout(Stdio::inherit())
-                .stderr(Stdio::null())
+                .stderr(Stdio::inherit())
                 .spawn()
                 .expect("failed to execute server process"),
         ));

@@ -5,7 +5,6 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-
 use deno_core::{JsRuntime, RuntimeOptions};
 use ipc_channel::platform::{self, OsIpcChannel, OsIpcSender};
 use protobuf::Message as _;
@@ -13,9 +12,7 @@ use scorched::{logf, set_log_prefix, LogData, LogImportance};
 
 use crate::{
     jshost::{
-        controller::{
-            interface::{Message, Op},
-        },
+        controller::interface::{Message, Op},
         worker::{js::ext::oogabooga, ops},
     },
     message_handler,
@@ -45,17 +42,22 @@ pub async fn run(name: String) -> Result<(), Box<dyn Error>> {
         .send(&[], vec![OsIpcChannel::Sender(worker_tx.clone())], vec![])
         .unwrap();
 
+    logf!(Info, "Worker initialized. (-1)");
+
     let mut runtime = JsRuntime::new(RuntimeOptions {
         extensions: vec![oogabooga::init_ops_and_esm()],
         ..Default::default()
     });
 
+    logf!(Info, "Worker initialized.");
+
     loop {
         message_handler!(
             worker_rx.lock().unwrap(),
-            Op::Init => |msg: Message | ops::init::init(msg, (&mut runtime, controller_tx.clone())),
-            Op::LoadGame(id) => |msg: Message| ops::loadgame::loadgame(msg, id, (&mut runtime, controller_tx.clone())),
-            Op::ExecuteScript(script) => |msg: Message| ops::executescript::executescript(msg, script, (&mut runtime, controller_tx.clone()))
+            Op::Init => |msg: Message | {ops::init::init(msg, (&mut runtime, controller_tx.clone()));},
+            Op::LoadGame(id) => |msg: Message| {ops::loadgame::loadgame(msg, id, (&mut runtime, controller_tx.clone()));},
+            Op::StartGame(code) => |msg: Message| {ops::startgame::startgame(msg, code, (&mut runtime, controller_tx.clone()));},
+            Op::ExecuteScript(script) => |msg: Message| {ops::executescript::executescript(msg, script, (&mut runtime, controller_tx.clone()));}
         );
     }
 }
