@@ -44,11 +44,11 @@ pub enum Op {
     InitComplete,                             // Initialization complete
     LoadGame(OBGId),                          // Load game, with game id (OBGId)
     LoadGameComplete(Result<(), JsError>),    // Load game completion, with result
-    StartGame(GameId),                        // Start game, with game id (game code)
-    StartGameComplete(Result<(), JsError>),   // Start game completion, with result
-    ExecuteScript(String),                    // Execute script, with script as string
+    StartGame(GameId, OBGId), // Start game, with game id (game code) and owner id (OBGId)
+    StartGameComplete(Result<(), JsError>), // Start game completion, with result
+    ExecuteScript(String),    // Execute script, with script as string
     ExecuteComplete(Result<String, JsError>), // Execution completion, with script output
-    Nop(Option<String>),                      // No operation, Optional comment
+    Nop(Option<String>),      // No operation, Optional comment
 }
 pub struct JsInterface {
     pub workers: HashMap<OBGId, Worker>,
@@ -56,7 +56,7 @@ pub struct JsInterface {
 
 #[dbus_interface(name = "games.oogabooga.JsHost.JsInterface")]
 impl JsInterface {
-    fn create_game(&mut self, id: u64, code: u32) {
+    fn create_game(&mut self, id: u64, code: u32, owner: u64) {
         let worker = Worker::spawn();
         let msg = worker.init();
         let (tx, rx) = (worker.tx().unwrap(), worker.rx().unwrap());
@@ -77,7 +77,7 @@ impl JsInterface {
                             }
                             Op::LoadGameComplete(_) => {
                                 logf!(Info, "Load complete");
-                                let next = worker.next(Op::StartGame(GameId(code)));
+                                let next = worker.next(Op::StartGame(GameId(code), owner.into()));
                                 tx.send(&bincode::serialize(&next).unwrap()[..], vec![], vec![])
                                     .unwrap();
                             }

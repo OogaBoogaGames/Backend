@@ -14,12 +14,13 @@ use crate::{
 pub fn startgame(
     msg: Message,
     id: GameId,
+    owner: OBGId,
     (runtime, controller_tx): (&mut JsRuntime, OsIpcSender),
 ) {
     runtime
         .execute_script(
             "__obg__.runtime.exec",
-            FastString::from(format!("globalThis.target.start(\"{id}\");")),
+            FastString::from(format!("globalThis.target.start(\"{id}\", \"{owner}\");")),
         )
         .unwrap();
 

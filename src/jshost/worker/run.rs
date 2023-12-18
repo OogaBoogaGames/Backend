@@ -56,7 +56,7 @@ pub async fn run(name: String) -> Result<(), Box<dyn Error>> {
             worker_rx.lock().unwrap(),
             Op::Init => |msg: Message | {ops::init::init(msg, (&mut runtime, controller_tx.clone()));},
             Op::LoadGame(id) => |msg: Message| {ops::loadgame::loadgame(msg, id, (&mut runtime, controller_tx.clone()));},
-            Op::StartGame(code) => |msg: Message| {ops::startgame::startgame(msg, code, (&mut runtime, controller_tx.clone()));},
+            Op::StartGame(code, owner) => |msg: Message| {ops::startgame::startgame(msg, code, owner, (&mut runtime, controller_tx.clone()));},
             Op::ExecuteScript(script) => |msg: Message| {ops::executescript::executescript(msg, script, (&mut runtime, controller_tx.clone()));}
         );
     }
