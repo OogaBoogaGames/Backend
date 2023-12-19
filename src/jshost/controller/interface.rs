@@ -12,7 +12,10 @@ use scorched::{logf, LogData, LogImportance};
 use serde::{Deserialize, Serialize};
 use zbus::dbus_interface;
 
-use crate::backend::util::id::{GameId, OBGId};
+use crate::{
+    backend::util::id::{GameId, OBGId},
+    message_handler,
+};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Message {
@@ -64,38 +67,30 @@ impl JsInterface {
         tx.send(&bincode::serialize(&msg).unwrap()[..], vec![], vec![])
             .unwrap();
 
-        loop {
-            match rx.recv() {
-                Ok(data) => {
-                    if let Ok(msg) = bincode::deserialize::<Message>(&data.0) {
-                        match msg.op() {
-                            Op::InitComplete => {
-                                logf!(Info, "Init complete");
-                                let next = worker.next(Op::LoadGame(id.into()));
-                                tx.send(&bincode::serialize(&next).unwrap()[..], vec![], vec![])
-                                    .unwrap();
-                            }
-                            Op::LoadGameComplete(_) => {
-                                logf!(Info, "Load complete");
-                                let next = worker.next(Op::StartGame(GameId(code), owner.into()));
-                                tx.send(&bincode::serialize(&next).unwrap()[..], vec![], vec![])
-                                    .unwrap();
-                            }
-                            Op::StartGameComplete(_) => {
-                                logf!(Info, "Start complete");
-                                let next = worker.next(Op::Nop(None));
-                                tx.send(&bincode::serialize(&next).unwrap()[..], vec![], vec![])
-                                    .unwrap();
-                                break;
-                            }
-
-                            _ => {}
-                        }
-                    }
-                }
-                _ => {}
-            };
-        }
+        message_handler!(
+            rx,
+            Op::InitComplete => |msg: Message| {
+                logf!(Info, "Init complete");
+                let next = worker.next(Op::LoadGame(id.into()));
+                tx.send(&bincode::serialize(&next).unwrap()[..], vec![], vec![])
+                    .unwrap();
+                true
+            },
+            Op::LoadGameComplete(_) => |msg: Message| {
+                logf!(Info, "Load complete");
+                let next = worker.next(Op::StartGame(GameId(code), owner.into()));
+                tx.send(&bincode::serialize(&next).unwrap()[..], vec![], vec![])
+                    .unwrap();
+                true
+            },
+            Op::StartGameComplete(_) => |msg: Message| {
+                logf!(Info, "Start complete");
+                let next = worker.next(Op::Nop(None));
+                tx.send(&bincode::serialize(&next).unwrap()[..], vec![], vec![])
+                    .unwrap();
+                false
+            }
+        );
 
         self.workers.insert(id.into(), worker.clone());
     }

@@ -7,7 +7,7 @@ pub fn executescript(
     msg: Message,
     script: String,
     (runtime, controller_tx): (&mut JsRuntime, OsIpcSender),
-) {
+) -> bool {
     runtime
         .execute_script("__obg__.runtime.exec", script.into())
         .unwrap();
@@ -17,4 +17,6 @@ pub fn executescript(
         .clone()
         .send(&bincode::serialize(&next).unwrap()[..], vec![], vec![])
         .unwrap();
+
+    true
 }

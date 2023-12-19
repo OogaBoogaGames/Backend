@@ -11,7 +11,11 @@ use crate::{
     jshost::controller::interface::{Message, Op},
 };
 
-pub fn loadgame(msg: Message, id: OBGId, (runtime, controller_tx): (&mut JsRuntime, OsIpcSender)) {
+pub fn loadgame(
+    msg: Message,
+    id: OBGId,
+    (runtime, controller_tx): (&mut JsRuntime, OsIpcSender),
+) -> bool {
     let next = msg.next(Op::LoadGameComplete(Ok(())));
 
     let games_path: PathBuf = env::var("GAMES_PATH")
@@ -38,4 +42,6 @@ pub fn loadgame(msg: Message, id: OBGId, (runtime, controller_tx): (&mut JsRunti
         .clone()
         .send(&bincode::serialize(&next).unwrap()[..], vec![], vec![])
         .unwrap();
+
+    true
 }

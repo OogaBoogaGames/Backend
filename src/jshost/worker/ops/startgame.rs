@@ -16,7 +16,7 @@ pub fn startgame(
     id: GameId,
     owner: OBGId,
     (runtime, controller_tx): (&mut JsRuntime, OsIpcSender),
-) {
+) -> bool {
     runtime
         .execute_script(
             "__obg__.runtime.exec",
@@ -29,4 +29,6 @@ pub fn startgame(
         .clone()
         .send(&bincode::serialize(&next).unwrap()[..], vec![], vec![])
         .unwrap();
+
+    true
 }
